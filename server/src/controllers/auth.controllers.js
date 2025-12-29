@@ -47,7 +47,7 @@ export const register = async (req, res) => {
         //issueing jwt token
         const token = jwt.sign({id: newUser._id,  role: newUser.role}, process.env.JWT_SECRET, {expiresIn: '7d'})
 
-        res.cookie("jwt", token, {
+        res.cookie("authToken", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
@@ -98,7 +98,7 @@ export const login = async (req, res) => {
 
         await existingUser.updateOne({lastLogin: Date.now()})
 
-        res.cookie("jwt", token, {
+        res.cookie("authToken", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
@@ -119,6 +119,6 @@ export const login = async (req, res) => {
 }
 
 export const logout = (req, res) => {
-    res.clearCookie("jwt");
+    res.clearCookie("authToken");
     res.status(200).json({message: "Logout successful"});
 }
