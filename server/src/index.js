@@ -9,14 +9,16 @@ const PORT = process.env.PORT || 8000;
 
 
 //Middlewares
-app.use(cors({
-    origin: "http://localhost:5174",
-    credentials: true
-}));
+// app.use(cors({
+//     origin: "http://localhost:5174",
+//     credentials: true
+// }));
 app.use(express.json());
 app.use(cookieParser());
 
 //Routes
+import authRoutes from './routes/auth.routes.js'
+app.use('/api/auth', authRoutes);
 
 app.listen(PORT, ()=>{
     console.log(`Server is running on port: ${PORT}`)
