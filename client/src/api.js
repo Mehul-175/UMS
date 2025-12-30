@@ -25,3 +25,17 @@ export async function logoutRequest() {
   });
 }
 
+export async function updateProfileRequest(fullName) {
+  return apiRequest("/user/profile", {
+    method: "PUT",
+    body: JSON.stringify({ fullName }),
+  });
+}
+
+export async function changePasswordRequest(currentPassword, newPassword) {
+  return apiRequest("/user/change-password", {
+    method: "PUT",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
