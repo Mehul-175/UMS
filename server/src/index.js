@@ -8,11 +8,11 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 
 
-//Middlewares
-// app.use(cors({
-//     origin: "http://localhost:5174",
-//     credentials: true
-// }));
+// Middlewares
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
 app.use(express.json());
 app.use(cookieParser());
 
