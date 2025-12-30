@@ -1,47 +1,60 @@
 import { useEffect, useState } from "react";
-import {
-  apiRequest,
-  logoutRequest,
-  updateProfileRequest,
-  changePasswordRequest,
+import { 
+  apiRequest, 
+  updateProfileRequest, 
+  changePasswordRequest 
 } from "../api";
+import toast from "react-hot-toast";
+import Spinner from "../components/Spinner";
+// FIX: Added 'Lock' to the imports below
+import { User, Mail, Shield, Key, Save, Lock } from "lucide-react";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [newFullName, setNewFullName] = useState("");
+  
+  // Password State
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  
   const [loading, setLoading] = useState(false);
+  const [passLoading, setPassLoading] = useState(false);
 
   useEffect(() => {
-    apiRequest("/user/me")
-      .then((res) => setUser(res.user))
-      .catch((err) => alert(err.message));
+    loadUser();
   }, []);
 
-  async function handleLogout() {
+  async function loadUser() {
     try {
-      await logoutRequest();
-      window.location.href = "/";
+      const res = await apiRequest("/user/me");
+      setUser(res.user);
+      // Handle both backend casing conventions (fullname vs fullName)
+      setNewFullName(res.user.fullname || res.user.fullName); 
     } catch (err) {
-      alert(err.message);
+      console.error(err);
+      toast.error("Failed to load profile");
     }
   }
 
-  async function handleUpdateProfile() {
+async function handleUpdateProfile() {
     if (!newFullName) {
-      alert("Please enter a new name");
+      toast.error("Name cannot be empty");
       return;
     }
 
     try {
       setLoading(true);
-      const res = await updateProfileRequest(newFullName);
-      setUser(res.user);
-      setNewFullName(""); // keep field empty after update
-      alert("Profile updated successfully");
+      await updateProfileRequest(newFullName);
+      
+      toast.success("Profile updated successfully");
+      
+      // FIX: Force a reload after 1 second so the Navbar updates too
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message || "Update failed");
     } finally {
       setLoading(false);
     }
@@ -49,101 +62,128 @@ export default function Profile() {
 
   async function handleChangePassword() {
     if (!currentPassword || !newPassword) {
-      alert("All password fields are required");
+      toast.error("Both password fields are required");
       return;
     }
 
     try {
-      setLoading(true);
+      setPassLoading(true);
       await changePasswordRequest(currentPassword, newPassword);
       setCurrentPassword("");
       setNewPassword("");
-      alert("Password updated successfully");
+      toast.success("Password changed successfully");
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message || "Failed to change password");
     } finally {
-      setLoading(false);
+      setPassLoading(false);
     }
   }
 
   if (!user) {
-    return <div className="p-6">Loading profile...</div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spinner />
+      </div>
+    );
   }
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-semibold">Profile</h1>
-        <button className="border px-3 py-1" onClick={handleLogout}>
-          Logout
-        </button>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
 
-      {/* Profile Info */}
-      <div className="border p-4 mb-6">
-        <p><strong>Name:</strong> {user.fullname}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>Role:</strong> {user.role}</p>
-        <p><strong>Status:</strong> {user.status}</p>
+      {/* Grid Layout: Identity on Left, Security on Right (Desktop) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        {/* LEFT COLUMN: Profile Details */}
+        <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center">
+              <User size={32} />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold">{user.fullname || user.fullName}</h2>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 uppercase">
+                {user.role}
+              </span>
+            </div>
+          </div>
 
-        {user.role === "admin" && (
-          <button
-            className="mt-3 border px-3 py-1"
-            onClick={() => (window.location.href = "/admin")}
-          >
-            Go to Admin Dashboard
-          </button>
-        )}
-      </div>
+          <div className="space-y-4">
+            {/* Read-Only Email */}
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">EMAIL ADDRESS</label>
+              <div className="flex items-center gap-2 bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-gray-500 cursor-not-allowed">
+                <Mail size={16} />
+                <span>{user.email}</span>
+              </div>
+            </div>
 
-      {/* Update Profile */}
-      <div className="border p-4 mb-6">
-        <h2 className="font-semibold mb-3">Update Name</h2>
+            {/* Editable Name */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">FULL NAME</label>
+              <input
+                className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none"
+                value={newFullName}
+                onChange={(e) => setNewFullName(e.target.value)}
+              />
+            </div>
 
-        <input
-          className="border p-2 w-full mb-3"
-          placeholder="Enter new full name"
-          value={newFullName}
-          onChange={(e) => setNewFullName(e.target.value)}
-        />
+            <button
+              onClick={handleUpdateProfile}
+              disabled={loading}
+              className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-70"
+            >
+              {loading ? <Spinner /> : <><Save size={18} /> Save Changes</>}
+            </button>
+          </div>
+        </div>
 
-        <button
-          className="border px-4 py-1"
-          onClick={handleUpdateProfile}
-          disabled={loading}
-        >
-          Update Profile
-        </button>
-      </div>
+        {/* RIGHT COLUMN: Security */}
+        <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-6 text-gray-900">
+            <Shield size={24} className="text-indigo-600" />
+            <h2 className="text-lg font-semibold">Security & Password</h2>
+          </div>
 
-      {/* Change Password */}
-      <div className="border p-4">
-        <h2 className="font-semibold mb-3">Change Password</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">CURRENT PASSWORD</label>
+              <div className="relative">
+                <Key className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <input
+                  type="password"
+                  className="pl-9 w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  placeholder="Enter current password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                />
+              </div>
+            </div>
 
-        <input
-          className="border p-2 w-full mb-3"
-          type="password"
-          placeholder="Current Password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-        />
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">NEW PASSWORD</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <input
+                  type="password"
+                  className="pl-9 w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  placeholder="Enter new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
+            </div>
 
-        <input
-          className="border p-2 w-full mb-3"
-          type="password"
-          placeholder="New Password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-        />
+            <button
+              onClick={handleChangePassword}
+              disabled={passLoading}
+              className="w-full mt-4 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium p-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-70"
+            >
+              {passLoading ? <Spinner /> : "Update Password"}
+            </button>
+          </div>
+        </div>
 
-        <button
-          className="border px-4 py-1"
-          onClick={handleChangePassword}
-          disabled={loading}
-        >
-          Change Password
-        </button>
       </div>
     </div>
   );
