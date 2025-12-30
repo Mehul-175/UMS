@@ -47,11 +47,12 @@ export const register = async (req, res) => {
         //issueing jwt token
         const token = jwt.sign({id: newUser._id,  role: newUser.role}, process.env.JWT_SECRET, {expiresIn: '7d'})
 
+        const isProduction = process.env.NODE_ENV === "production";
+
         res.cookie("authToken", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "none",
-        maxAge: 7*24*60*60*1000
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
         });
     
         return res.status(201).json({
@@ -83,7 +84,7 @@ export const login = async (req, res) => {
         }
 
         //check if the user is active
-        if(existingUser.status === 'deactivated'){
+        if(existingUser.status === 'inactive'){
             return res.status(403).json({message: "User is deactivated"})
         }
     
@@ -98,12 +99,14 @@ export const login = async (req, res) => {
 
         await existingUser.updateOne({lastLogin: Date.now()})
 
+        const isProduction = process.env.NODE_ENV === "production";
+
         res.cookie("authToken", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "none",
-        maxAge: 7*24*60*60*1000
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
         });
+
 
         return res.status(200).json({
             success: true,
@@ -119,6 +122,10 @@ export const login = async (req, res) => {
 }
 
 export const logout = (req, res) => {
-    res.clearCookie("authToken");
+    res.clearCookie("authToken", {
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    });
+
     res.status(200).json({message: "Logout successful"});
 }
