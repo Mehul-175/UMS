@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Login from "./pages/Login.jsx";
+import Signup from "./pages/SignUp.jsx";
 import Admin from "./pages/Admin.jsx";
 import Profile from "./pages/Profile.jsx";
 import { apiRequest } from "./api.js";
@@ -26,8 +27,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
 
+        {/* Protected routes */}
         <Route
           path="/admin"
           element={
@@ -46,6 +50,7 @@ export default function App() {
           }
         />
 
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

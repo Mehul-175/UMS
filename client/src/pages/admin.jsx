@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { apiRequest } from "../api";
+import { apiRequest, logoutRequest } from "../api";
 
 export default function Admin() {
   const [users, setUsers] = useState([]);
@@ -33,9 +33,26 @@ export default function Admin() {
     }
   }
 
+  async function handleLogout() {
+    try {
+      await logoutRequest();
+      window.location.href = "/";
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
   return (
     <div className="p-6">
-      <h1 className="text-xl font-semibold mb-4">Admin Dashboard</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-semibold">Admin Dashboard</h1>
+        <button
+          className="border px-3 py-1"
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
+      </div>
 
       {loading ? (
         <p>Loading users...</p>

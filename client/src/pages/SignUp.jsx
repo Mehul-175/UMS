@@ -1,26 +1,31 @@
 import { useState } from "react";
 import { apiRequest } from "../api";
 
-export default function Login() {
+export default function Signup() {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin() {
-    if (!email || !password) {
-      alert("Email and password required");
+  async function handleSignup() {
+    if (!fullName || !email || !password) {
+      alert("All fields are required");
       return;
     }
 
     try {
       setLoading(true);
 
-      await apiRequest("/auth/login", {
+      await apiRequest("/auth/register", {
         method: "POST",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          fullName,
+          email,
+          password,
+        }),
       });
 
-      // Check logged-in user
+      // Cookie is set by backend → verify user
       const me = await apiRequest("/user/me");
 
       if (me.user.role === "admin") {
@@ -28,6 +33,7 @@ export default function Login() {
       } else {
         window.location.href = "/profile";
       }
+
     } catch (err) {
       alert(err.message);
     } finally {
@@ -38,7 +44,14 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-80 bg-white border p-6 rounded">
-        <h1 className="text-xl font-semibold mb-4">Login</h1>
+        <h1 className="text-xl font-semibold mb-4">Sign Up</h1>
+
+        <input
+          className="border p-2 w-full mb-3"
+          placeholder="Full Name"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+        />
 
         <input
           className="border p-2 w-full mb-3"
@@ -57,17 +70,16 @@ export default function Login() {
 
         <button
           className="bg-black text-white w-full p-2 disabled:opacity-60"
-          onClick={handleLogin}
+          onClick={handleSignup}
           disabled={loading}
         >
-          {loading ? "Logging in..." : "Login"}
+          {loading ? "Creating account..." : "Sign Up"}
         </button>
 
-        {/* Signup link */}
         <p className="text-sm mt-4 text-center">
-          Don’t have an account?{" "}
-          <a href="/signup" className="underline">
-            Sign up
+          Already have an account?{" "}
+          <a href="/" className="underline">
+            Login
           </a>
         </p>
       </div>
