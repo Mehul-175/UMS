@@ -1,178 +1,146 @@
 # User Management System
+### Backend Developer Intern Assessment
 
-A full-stack **User Management System** built with **MERN stack**, featuring secure authentication, role-based access control, admin user management, and pagination.  
-The project demonstrates **production-ready backend practices** with a minimal but functional frontend.
+A full-stack **User Management System** built with the **MERN stack**, featuring secure authentication, role-based access control (RBAC), admin user management, and server-side pagination. This project demonstrates production-ready backend practices including secure cookie handling, input validation, and clean architecture.
 
 ---
 
-## 🔗 Live Demo
-
-- **Frontend (Vercel)**: https://user-management-system-mu-five.vercel.app  
+## 🔗 Live Deployment
+- **Frontend (Vercel)**: https://user-management-system-mu-five.vercel.app
 - **Backend (Render)**: https://user-management-system-pl0i.onrender.com
 
 ---
 
-## ✨ Features
-
-### Authentication & Authorization
-- User **Signup / Login / Logout**
-- **JWT-based authentication** stored in **HTTP-only cookies**
-- Secure cookie handling with `SameSite=None` and `Secure` in production
-- Protected routes using middleware
-- Role-based access (`user`, `admin`)
-
-### User Features
-- View own profile
-- Update profile name
-- Change password with validation
-- Session persistence across refresh
-
-### Admin Features
-- View all users (paginated)
-- Activate / Deactivate users
-- Prevent admin from modifying own account status
-- Pagination synced with URL query params (`?page=`)
-
-### Security & Production Practices
-- Password hashing using `bcryptjs`
-- Environment-based configuration
-- Proper CORS handling for cross-origin cookies
-- `trust proxy` enabled for secure cookies behind reverse proxy
-- Clean separation of routes, controllers, and middleware
-
----
-
-## 🧱 Tech Stack
+## 🛠 Tech Stack
 
 ### Backend
-- Node.js
-- Express.js
-- MongoDB + Mongoose
-- JWT
-- bcryptjs
-- cookie-parser
-- cors
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: MongoDB (Atlas) + Mongoose
+- **Authentication**: JWT (JSON Web Tokens) stored in HTTP-Only Cookies
+- **Security**: bcryptjs (Password Hashing), cors
 
 ### Frontend
-- React (Vite)
-- React Router DOM
-- Tailwind CSS
-- Fetch API (with credentials)
-
-### Deployment
-- **Frontend**: Vercel
-- **Backend**: Render
-- **Database**: MongoDB Atlas
+- **Framework**: React (Vite)
+- **Styling**: Tailwind CSS
+- **Routing**: React Router DOM v6
+- **State/Notifications**: React Hot Toast
+- **Icons**: Lucide React
 
 ---
 
-## 📂 Project Structure
+## ⚙️ Getting Started
+### 1. Clone the Repository
+```bash
+git clone https://github.com/Mehul-175/UMS.git
 
-### Backend
-```text
-server/
-├─ src/
-│ ├─ controllers/
-│ ├─ models/
-│ ├─ routes/
-│ ├─ middleware/
-│ ├─ utils/
-│ └─ index.js
-├─ package.json
-```
-### Frontend
-```text
-client/
-├─ src/
-│ ├─ pages/
-│ ├─ api.js
-│ ├─ App.jsx
-│ └─ main.jsx
-├─ package.json
-└─ vercel.json
+cd UMS 
+````
+
+### 2. Backend Setup
+
+```bash
+cd server
+npm install
 ```
 
+### 3\. Create Environment Variables
 
----
+Create a **`.env`** file inside the `backend` folder and add the following:
 
-## 🔐 Authentication Flow
-
-1. User logs in or registers
-2. Backend issues a JWT
-3. JWT is stored in an **HTTP-only cookie**
-4. Browser automatically sends cookie on subsequent requests
-5. Backend verifies token on protected routes
-6. Role middleware restricts admin-only endpoints
-
----
-
-## 🌐 CORS Strategy (Important)
-
-- CORS is **restricted to the production frontend domain**
-- Cookies are allowed using `credentials: true`
-- CORS is enforced **only by browsers**, not tools like Postman
-
-## Example production configuration:
-```js
-app.use(cors({
-  origin: "https://user-management-system-mu-five.vercel.app",
-  credentials: true
-}));
+```
+PORT=8000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET="your_secret_key"
 ```
 
-## 🧪 Pagination Strategy
+*(Replace the placeholder values with your actual MongoDB URI and secret key.)*
 
-- Backend pagination using skip and limit
+### 4\. Run the Server
 
-- Frontend disables navigation beyond the last page
+```bash
+npm run dev
+# Server runs at http://localhost:8000
+```
 
-- Pagination state synced with URL query parameters
+### 5. Setup Frontend
+```bash
+cd ../frontend
+npm install
+```
+### 6. Frontend env
+```bash
+VITE_API_URL=http://localhost:8000
+```
 
-## Environment Variables
-### Backend (.env)
-- PORT=8000
-- MONGO_URI=your_mongodb_uri
-- JWT_SECRET=your_jwt_secret
+### 7. Run the Server
 
-### Frontend (Vercel Environment Variables)
-- VITE_API_URL=https://your-backend.onrender.com/api
+```bash
+npm run dev
+# Client runs on http://localhost:5173
+```
+-----
 
-- Frontend .env is not committed to GitHub.
-- Production environment variables are configured directly in Vercel.
+## 🧩 API Documentations
 
-## 🚀 Deployment Overview
+**Auth Routes** → `/api/auth`
+*/register, /login, /logout*
 
-- Backend deployed first on Render
+**User Routes (Protected)** → `/api/user`
+*/me, /profile, /change-password*
 
-- Frontend deployed on Vercel
+**Admin Routes (Protected- Role: Admin)** → `/api/admin`
+*/users?page=1, /user/:id/activate, /user/:id/deactivate*
 
-- CORS locked to production frontend URL
+-----
 
-- Client-side routing handled using Vercel rewrites
+## 🔐 Security & Architecture Features
+### 1. Authentication Flow
+- Login/Signup: Backend issues a JWT signed with a secret.
 
-vercel.json:
-```json
+- Storage: JWT is sent as an httpOnly cookie. This prevents XSS attacks from stealing the token.
 
-{
+- Verification: Middleware verifies the token on every protected request.
+
+### 2. Role-Based Access Control (RBAC)
+- Custom middleware checks user.role before allowing access to Admin routes.
+
+- Frontend protects routes using a wrapper component that redirects unauthorized users.
+
+3. CORS & Production Config
+- CORS: Restricted to the specific production frontend domain.
+
+- Cookies: Configured with SameSite=None and Secure=true for cross-site usage in production.
+
+## 🚀 Deployment Strategy
+### Backend (Render)
+- Deployed as a Web Service.
+
+- Environment variables configured in Render Dashboard.
+
+- trust proxy enabled in Express to handle cookies behind Render's load balancer.
+
+### Frontend (Vercel)
+- Deployed via GitHub integration.
+
+- vercel.json configured to handle client-side routing rewrites:
+
+  * Backend MVP (Users, Items, Requests)
+  * Frontend (React + Tailwind)
+  * Admin dashboard & analytics
+  * Deployment (Render / Vercel)
+
+  ```json
+  {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
-}
-```
+  }
+  ```
+
+-----
 
 
-## 🧠 Key Learnings
+## 📜 License
 
-- Secure handling of HTTP-only cookies in cross-origin setups
-
-- Difference between CORS and authentication
-
-- Git case-sensitivity issues on Linux deployments
-
-- URL-based pagination handling
-
-- Production-grade deployment workflow
-
-## 📄 License
-
-- This project is for educational and demonstration purposes.
+This project is for educational and assessment purposes.
