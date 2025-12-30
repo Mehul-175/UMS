@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 8000;
 app.set("trust proxy", 1);
 
 app.use(cors({
-  origin: true,
+  origin: "https://user-management-system-mu-five.vercel.app/",
   credentials: true
 }));
 
